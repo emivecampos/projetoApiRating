@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Consulta Rating</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar__inner">
+      <div class="brand"><span class="brand__mark"></span><span id="brand-nome">Consulta Rating</span></div>
+      <div class="topbar__acoes" id="topbar-acoes" hidden>
+        <div class="saldo-pill" title="Seu saldo">
+          <span class="saldo-pill__label">Saldo</span>
+          <strong id="saldo-topo">R$ 0,00</strong>
+        </div>
+        <button class="btn btn--primary btn--sm" id="btn-recarregar-topo" type="button">+ Recarregar</button>
+        <button class="btn btn--ghost btn--sm" id="btn-sair" type="button">Sair</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="aviso-dev" id="aviso-dev" hidden></div>
+
+  <main class="container">
+    <!-- ============ LOGIN / CADASTRO ============ -->
+    <section id="view-auth" class="auth" hidden>
+      <div class="auth__intro">
+        <h1>Relatório de crédito completo, na hora.</h1>
+        <p>Rating bancário de Pessoa Física e Jurídica: classificação de risco, SPC, Serasa, Boa Vista, SCR do Bacen, protestos, ações cíveis e análise por IA — em uma única consulta.</p>
+        <ol class="passos">
+          <li><b>1</b><span>Crie sua conta</span></li>
+          <li><b>2</b><span>Recarregue via PIX</span></li>
+          <li><b>3</b><span>Consulte e receba o relatório na tela</span></li>
+        </ol>
+        <p class="preco-destaque">Cada consulta: <strong id="preco-auth">—</strong></p>
+      </div>
+      <div class="card auth__card">
+        <div class="tabs" role="tablist">
+          <button class="tab is-active" data-tab="login" type="button" role="tab">Entrar</button>
+          <button class="tab" data-tab="cadastro" type="button" role="tab">Criar conta</button>
+        </div>
+        <form id="form-login" class="form">
+          <label>E-mail<input name="email" type="email" autocomplete="email" required></label>
+          <label>Senha<input name="senha" type="password" autocomplete="current-password" required></label>
+          <p class="form__erro" data-erro></p>
+          <button class="btn btn--primary btn--block" type="submit">Entrar</button>
+        </form>
+        <form id="form-cadastro" class="form" hidden>
+          <label>Nome<input name="nome" autocomplete="name" required minlength="2"></label>
+          <label>E-mail<input name="email" type="email" autocomplete="email" required></label>
+          <label>Senha <small>(mín. 8 caracteres)</small><input name="senha" type="password" autocomplete="new-password" required minlength="8"></label>
+          <p class="form__erro" data-erro></p>
+          <button class="btn btn--primary btn--block" type="submit">Criar conta</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ============ APLICAÇÃO ============ -->
+    <section id="view-app" hidden>
+      <div class="grid-topo">
+        <div class="card card--consulta">
+          <h2>Nova consulta</h2>
+          <form id="form-consulta" class="form" novalidate>
+            <label>CPF ou CNPJ
+              <input name="documento" id="input-documento" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="18" required>
+            </label>
+            <div class="tipo-detectado" id="tipo-detectado">Digite um CPF ou CNPJ</div>
+            <label class="check">
+              <input type="checkbox" name="aceite" id="input-aceite">
+              <span>Declaro que tenho finalidade legítima para esta consulta e tratarei os dados conforme a LGPD.</span>
+            </label>
+            <p class="form__erro" data-erro></p>
+            <button class="btn btn--primary btn--block btn--lg" id="btn-consultar" type="submit">Consultar</button>
+            <p class="hint" id="hint-saldo"></p>
+          </form>
+        </div>
+
+        <div class="card card--saldo">
+          <h2>Sua carteira</h2>
+          <div class="saldo-grande" id="saldo-grande">R$ 0,00</div>
+          <div class="saldo-info">
+            <span>Preço por consulta</span><strong id="preco-app">—</strong>
+          </div>
+          <div class="saldo-info">
+            <span>Consultas disponíveis</span><strong id="consultas-disp">0</strong>
+          </div>
+          <button class="btn btn--primary btn--block" id="btn-recarregar" type="button">Recarregar via PIX</button>
+          <button class="btn btn--link" id="btn-extrato" type="button">Ver extrato</button>
+          <p class="hint">Consultas que não forem concluídas são estornadas automaticamente.</p>
+        </div>
+      </div>
+
+      <div id="carregando" class="card carregando" hidden>
+        <div class="spinner"></div>
+        <div>
+          <strong>Consultando…</strong>
+          <p>Buscando dados em SPC, Serasa, Boa Vista, SCR e cartórios. Isso pode levar alguns segundos.</p>
+        </div>
+      </div>
+
+      <div id="resultado"></div>
+
+      <div class="card">
+        <div class="card__head">
+          <h2>Histórico de consultas</h2>
+          <button class="btn btn--ghost btn--sm" id="btn-atualizar-hist" type="button">Atualizar</button>
+        </div>
+        <div id="historico" class="tabela-wrap"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ DIALOG RECARGA ============ -->
+  <dialog id="dlg-recarga" class="dialog">
+    <div class="dialog__head">
+      <h3>Recarregar saldo</h3>
+      <button class="dialog__fechar" data-fechar type="button" aria-label="Fechar">×</button>
+    </div>
+
+    <div id="recarga-passo1">
+      <p class="muted">Escolha o valor. O crédito cai na hora após o pagamento do PIX.</p>
+      <div class="valores" id="valores-rapidos"></div>
+      <label class="form">Outro valor (R$)
+        <input id="input-valor" type="number" step="0.01" inputmode="decimal">
+      </label>
+      <p class="hint" id="recarga-limites"></p>
+      <p class="form__erro" id="recarga-erro"></p>
+      <button class="btn btn--primary btn--block btn--lg" id="btn-gerar-pix" type="button">Gerar PIX</button>
+    </div>
+
+    <div id="recarga-passo2" hidden>
+      <div class="pix">
+        <div class="pix__valor" id="pix-valor"></div>
+        <div class="pix__qr" id="pix-qr"></div>
+        <label class="form">PIX copia e cola
+          <textarea id="pix-copia" readonly rows="3"></textarea>
+        </label>
+        <button class="btn btn--ghost btn--block" id="btn-copiar" type="button">Copiar código</button>
+        <div class="pix__status" id="pix-status"><span class="dot"></span> Aguardando pagamento…</div>
+        <p class="hint" id="pix-expira"></p>
+        <button class="btn btn--warn btn--block" id="btn-simular" type="button" hidden>Simular pagamento aprovado (modo teste)</button>
+      </div>
+    </div>
+
+    <div id="recarga-passo3" hidden>
+      <div class="sucesso">
+        <div class="sucesso__icone">✓</div>
+        <h4>Recarga confirmada!</h4>
+        <p id="recarga-sucesso-txt"></p>
+        <button class="btn btn--primary btn--block" data-fechar type="button">Fazer consulta</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ============ DIALOG EXTRATO ============ -->
+  <dialog id="dlg-extrato" class="dialog dialog--largo">
+    <div class="dialog__head">
+      <h3>Extrato</h3>
+      <button class="dialog__fechar" data-fechar type="button" aria-label="Fechar">×</button>
+    </div>
+    <div id="extrato" class="tabela-wrap"></div>
+  </dialog>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
